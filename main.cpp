@@ -15,6 +15,7 @@ struct Node {
   int y;
   int id;
   int f;
+  int g;
 };
 
 struct Compare {
@@ -36,6 +37,10 @@ void Backtrack(int* pOutBuffer, std::vector<int>& predecessors, int& id, int end
     currentIndex = predecessors[currentIndex];
     i++;
   }
+}
+
+int calculate_heuristic(std::string type, int x, int y, const int& tx, const int& ty) {
+  return std::max(x - tx, tx - x) + std::max(y - ty, ty - y);
 }
 
 // Brute force BFS
@@ -61,11 +66,11 @@ int FindPath(const int nStartX, const int nStartY,
     //std::cout << "This node predecessor " << predecessors[node.id] << std::endl;
     if (node.x == nTargetX && node.y == nTargetY) {
       std::cout << "NODE IS FOUND WITH ID "<< node.id << std::endl;
-      if (node.f > nOutBufferSize) {
+      if (node.g > nOutBufferSize) {
         return -1;
       }
       Backtrack(pOutBuffer, predecessors, node.id, id(nStartX, nStartY, nMapWidth), nOutBufferSize);
-      return node.f;
+      return node.g;
     }
 
     if (visited[node.id]) {
@@ -74,13 +79,14 @@ int FindPath(const int nStartX, const int nStartY,
     }
     visited[node.id] = 1;
     //std::cout << "node " << node.id << "IS VISITED NOT VISITING AGAIN EVER" << std::endl;
-
     {
       // Right
       Node neighbor = {node.x + 1, node.y, id(node.x + 1, node.y, nMapWidth), 0};
       if (!visited[neighbor.id] && neighbor.x + 1 <= nMapWidth && pMap[neighbor.id] != 0 && pMap[neighbor.id] != 'S') {
           //std::cout << "PUSHING NODE " << neighbor.id << std::endl;
-          neighbor.f = node.f + 1;
+          int distance = node.g + 1;
+          neighbor.g = distance;
+          neighbor.f = distance + calculate_heuristic("manhattan", node.x + 1, node.y, nTargetX, nTargetY);
           predecessors[neighbor.id] = node.id;
           queue.push(neighbor);
       }
@@ -90,7 +96,9 @@ int FindPath(const int nStartX, const int nStartY,
       Node neighbor = {node.x - 1, node.y, id(node.x - 1, node.y, nMapWidth), 0};
       if (!visited[neighbor.id] && neighbor.x > 0 && pMap[neighbor.id] != 0 && pMap[neighbor.id] != 'S') {
          // std::cout << "PUSHING NODE " << neighbor.id << std::endl;
-          neighbor.f = node.f + 1;
+          int distance = node.g + 1;
+          neighbor.g = distance;
+          neighbor.f = distance + calculate_heuristic("manhattan", node.x - 1, node.y, nTargetX, nTargetY);
           predecessors[neighbor.id] = node.id;
           queue.push(neighbor);
       }
@@ -100,7 +108,9 @@ int FindPath(const int nStartX, const int nStartY,
       Node neighbor = {node.x, node.y + 1, id(node.x, node.y + 1, nMapWidth), 0};
       if (!visited[neighbor.id] && neighbor.y + 1 <= nMapHeight && pMap[neighbor.id] != 0 && pMap[neighbor.id] != 'S') {
           //std::cout << "PUSHING NODE " << neighbor.id << std::endl;
-          neighbor.f = node.f + 1;
+          int distance = node.g + 1;
+          neighbor.g = distance;
+          neighbor.f = distance + calculate_heuristic("manhattan", node.x, node.y + 1, nTargetX, nTargetY);
           predecessors[neighbor.id] = node.id;
           queue.push(neighbor);
       }
@@ -110,7 +120,9 @@ int FindPath(const int nStartX, const int nStartY,
       Node neighbor = {node.x, node.y - 1, id(node.x, node.y - 1, nMapWidth), 0};
       if (!visited[neighbor.id] && neighbor.y > 0 && pMap[neighbor.id] != 0 && pMap[neighbor.id] != 'S') {
         //std::cout << "PUSHING NODE " << neighbor.id << std::endl;
-        neighbor.f = node.f + 1;
+        int distance = node.g + 1;
+        neighbor.g = distance;
+        neighbor.f = distance + calculate_heuristic("manhattan", node.x, node.y - 1, nTargetX, nTargetY);
         predecessors[neighbor.id] = node.id;
         queue.push(neighbor);
       }
@@ -192,3 +204,12 @@ int main() {
 // (0, 0) -> 0, (1, 0) -> 1, (2, 0) -> 2
 
 // id = y * mapWidth + x
+
+
+
+// Results
+// Test case 1: Time taken: 674s, popsfromqueue: 6
+// A* Test case 1: Time taken: 133s, popsfromqueue: 4
+
+// Swamp of Sorrow UFC : 210290s, 321446 pops from queue
+// Swamp of Sorrow A*: Time taken:   Pops from queue: 55841
