@@ -2,8 +2,11 @@
 #include <queue>
 #include <fstream>
 #include <chrono>
+#include <cmath>
 
 int popsFromQueue = 0;
+
+enum Heuristic { Manhattan = 0, SLD = 1};
 
 int FindPath(const int nStartX, const int nStartY,
              const int nTargetX, const int nTargetY,
@@ -39,8 +42,17 @@ void Backtrack(int* pOutBuffer, std::vector<int>& predecessors, int& id, int end
   }
 }
 
-int calculate_heuristic(std::string type, int x, int y, const int& tx, const int& ty) {
-  return std::max(x - tx, tx - x) + std::max(y - ty, ty - y);
+int calculate_heuristic(Heuristic type, int x, int y, const int& tx, const int& ty) {
+  int result;
+  switch (type) {
+    case Manhattan:
+      result = std::max(x - tx, tx - x) + std::max(y - ty, ty - y);
+      break;
+    case SLD:
+      result = sqrt(std::pow(abs(x-tx), 2) + std::pow(abs(y - ty), 2));
+      break;
+  }
+  return result;
 }
 
 // Brute force BFS
@@ -74,7 +86,6 @@ int FindPath(const int nStartX, const int nStartY,
     }
 
     if (visited[node.id]) {
-      //std::cout << "Node with id " << node.id << " already visited, aborting.. " << std::endl;
       continue;
     }
     visited[node.id] = 1;
@@ -86,7 +97,7 @@ int FindPath(const int nStartX, const int nStartY,
           //std::cout << "PUSHING NODE " << neighbor.id << std::endl;
           int distance = node.g + 1;
           neighbor.g = distance;
-          neighbor.f = distance + calculate_heuristic("manhattan", node.x + 1, node.y, nTargetX, nTargetY);
+          neighbor.f = distance + calculate_heuristic(Manhattan, node.x + 1, node.y, nTargetX, nTargetY);
           predecessors[neighbor.id] = node.id;
           queue.push(neighbor);
       }
@@ -98,7 +109,7 @@ int FindPath(const int nStartX, const int nStartY,
          // std::cout << "PUSHING NODE " << neighbor.id << std::endl;
           int distance = node.g + 1;
           neighbor.g = distance;
-          neighbor.f = distance + calculate_heuristic("manhattan", node.x - 1, node.y, nTargetX, nTargetY);
+          neighbor.f = distance + calculate_heuristic(Manhattan, node.x - 1, node.y, nTargetX, nTargetY);
           predecessors[neighbor.id] = node.id;
           queue.push(neighbor);
       }
@@ -110,7 +121,7 @@ int FindPath(const int nStartX, const int nStartY,
           //std::cout << "PUSHING NODE " << neighbor.id << std::endl;
           int distance = node.g + 1;
           neighbor.g = distance;
-          neighbor.f = distance + calculate_heuristic("manhattan", node.x, node.y + 1, nTargetX, nTargetY);
+          neighbor.f = distance + calculate_heuristic(Manhattan, node.x, node.y + 1, nTargetX, nTargetY);
           predecessors[neighbor.id] = node.id;
           queue.push(neighbor);
       }
@@ -122,7 +133,7 @@ int FindPath(const int nStartX, const int nStartY,
         //std::cout << "PUSHING NODE " << neighbor.id << std::endl;
         int distance = node.g + 1;
         neighbor.g = distance;
-        neighbor.f = distance + calculate_heuristic("manhattan", node.x, node.y - 1, nTargetX, nTargetY);
+        neighbor.f = distance + calculate_heuristic(Manhattan, node.x, node.y - 1, nTargetX, nTargetY);
         predecessors[neighbor.id] = node.id;
         queue.push(neighbor);
       }
@@ -212,4 +223,5 @@ int main() {
 // A* Test case 1: Time taken: 133s, popsfromqueue: 4
 
 // Swamp of Sorrow UFC : 210290s, 321446 pops from queue
-// Swamp of Sorrow A*: Time taken:   Pops from queue: 55841
+// Swamp of Sorrow A*: Time taken: 67256s Pops from queue: 55841
+// SLD: Pops from queue 295011
