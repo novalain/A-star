@@ -1,6 +1,9 @@
 #include <iostream>
 #include <queue>
 #include <fstream>
+#include <chrono>
+
+int popsFromQueue = 0;
 
 int FindPath(const int nStartX, const int nStartY,
              const int nTargetX, const int nTargetY,
@@ -51,6 +54,8 @@ int FindPath(const int nStartX, const int nStartY,
   while (!queue.empty()) {
     Node node = queue.top();
     queue.pop();
+
+    popsFromQueue++;
 
     //std::cout << "Investigating node with ID " << node.id << std::endl;
     //std::cout << "This node predecessor " << predecessors[node.id] << std::endl;
@@ -136,9 +141,9 @@ int main() {
 
   // // Test case 1
   // const unsigned char pMap[] = {1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 1, 1};
+  // const int startX = 0, startY = 0, endX = 1, endY = 2, mapWidth = 4, mapHeight = 3;
+  // int pOutBufferSize = 12;
   // int pOutBuffer[12];
-  // int a = FindPath(0, 0, 1, 2, pMap, 4, 3, pOutBuffer, 12);
-  //Expected output: 3 and {1, 5, 9}
 
  // Test case 2
   // unsigned char pMap[] = {0, 0, 1, 0, 1, 1, 1, 0, 1};
@@ -151,10 +156,17 @@ int main() {
   unsigned const int mapHeight = 512;
   unsigned char pMap[mapWidth * mapHeight];
   fetchData(pMap, "testcases/swampofsorrows.map");
-
   int pOutBuffer[mapWidth * mapHeight];
-  int a = FindPath(2, 2, 501, 501, pMap, mapWidth, mapHeight, pOutBuffer, mapWidth * mapHeight);
+  int pOutBufferSize = mapWidth * mapHeight;
+  int startX = 2, startY = 2, endX = 510, endY = 510;
 
+  std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
+  int a = FindPath(startX, startY, endX, endY, pMap, mapWidth, mapHeight, pOutBuffer, pOutBufferSize);
+  std::chrono::high_resolution_clock::time_point t2 = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::microseconds>( t2 - t1 ).count();
+
+  std::cout << "Time taken: " << duration << "s" << std::endl;
+  std::cout << "Pops from queue: " << popsFromQueue << std::endl;
   std::cout << "Length shortest path: " << a << std::endl;
   std::cout << "{";
   for (int i = 0; i < a; i++) {
